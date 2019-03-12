@@ -2,7 +2,7 @@
  "cells": [
   {
    "cell_type": "code",
-   "execution_count": 1,
+   "execution_count": 6,
    "metadata": {},
    "outputs": [],
    "source": [
@@ -19,7 +19,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 94,
+   "execution_count": 7,
    "metadata": {},
    "outputs": [
     {
@@ -62,7 +62,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 95,
+   "execution_count": 8,
    "metadata": {},
    "outputs": [
     {
@@ -98,7 +98,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 96,
+   "execution_count": 9,
    "metadata": {},
    "outputs": [
     {
@@ -107,7 +107,7 @@
        "Text(0.5, 1.0, 'Most common tweet words')"
       ]
      },
-     "execution_count": 96,
+     "execution_count": 9,
      "metadata": {},
      "output_type": "execute_result"
     },
@@ -141,7 +141,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 97,
+   "execution_count": 10,
    "metadata": {},
    "outputs": [
     {
@@ -171,7 +171,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 98,
+   "execution_count": 11,
    "metadata": {},
    "outputs": [
     {
@@ -209,7 +209,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 99,
+   "execution_count": 12,
    "metadata": {},
    "outputs": [
     {
@@ -246,7 +246,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 100,
+   "execution_count": 13,
    "metadata": {},
    "outputs": [
     {
@@ -328,7 +328,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 101,
+   "execution_count": 14,
    "metadata": {},
    "outputs": [
     {
@@ -352,7 +352,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 102,
+   "execution_count": 15,
    "metadata": {},
    "outputs": [
     {
@@ -382,7 +382,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 103,
+   "execution_count": 16,
    "metadata": {},
    "outputs": [
     {
@@ -417,7 +417,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 104,
+   "execution_count": 17,
    "metadata": {},
    "outputs": [
     {
@@ -618,7 +618,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 105,
+   "execution_count": 18,
    "metadata": {},
    "outputs": [],
    "source": [
@@ -638,7 +638,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 106,
+   "execution_count": 19,
    "metadata": {},
    "outputs": [
     {
@@ -657,7 +657,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 107,
+   "execution_count": 20,
    "metadata": {},
    "outputs": [],
    "source": [
@@ -667,7 +667,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 122,
+   "execution_count": 21,
    "metadata": {},
    "outputs": [
     {
@@ -675,7 +675,7 @@
       "text/html": [
        "\n",
        "<div style=\"border: 1px solid black; width:500px\">\n",
-       "  <div id=\"1a3af903-2b72-49ee-86f1-ea735e7b9ab6\" style=\"background-color:blue; width:0%\">&nbsp;</div>\n",
+       "  <div id=\"046d66da-f5b4-40ce-9532-2e4f7bf6b94e\" style=\"background-color:blue; width:0%\">&nbsp;</div>\n",
        "</div> \n"
       ],
       "text/plain": [
@@ -688,7 +688,7 @@
     {
      "data": {
       "application/javascript": [
-       "$('div#1a3af903-2b72-49ee-86f1-ea735e7b9ab6').width('10%')"
+       "$('div#046d66da-f5b4-40ce-9532-2e4f7bf6b94e').width('10%')"
       ],
       "text/plain": [
        "<IPython.core.display.Javascript object>"
@@ -700,7 +700,7 @@
     {
      "data": {
       "application/javascript": [
-       "$('div#1a3af903-2b72-49ee-86f1-ea735e7b9ab6').width('20%')"
+       "$('div#046d66da-f5b4-40ce-9532-2e4f7bf6b94e').width('20%')"
       ],
       "text/plain": [
        "<IPython.core.display.Javascript object>"
@@ -712,7 +712,7 @@
     {
      "data": {
       "application/javascript": [
-       "$('div#1a3af903-2b72-49ee-86f1-ea735e7b9ab6').width('30%')"
+       "$('div#046d66da-f5b4-40ce-9532-2e4f7bf6b94e').width('30%')"
       ],
       "text/plain": [
        "<IPython.core.display.Javascript object>"
@@ -724,7 +724,7 @@
     {
      "data": {
       "application/javascript": [
-       "$('div#1a3af903-2b72-49ee-86f1-ea735e7b9ab6').width('40%')"
+       "$('div#046d66da-f5b4-40ce-9532-2e4f7bf6b94e').width('40%')"
       ],
       "text/plain": [
        "<IPython.core.display.Javascript object>"
@@ -736,7 +736,7 @@
     {
      "data": {
       "application/javascript": [
-       "$('div#1a3af903-2b72-49ee-86f1-ea735e7b9ab6').width('50%')"
+       "$('div#046d66da-f5b4-40ce-9532-2e4f7bf6b94e').width('50%')"
       ],
       "text/plain": [
        "<IPython.core.display.Javascript object>"
@@ -748,7 +748,7 @@
     {
      "data": {
       "application/javascript": [
-       "$('div#1a3af903-2b72-49ee-86f1-ea735e7b9ab6').width('60%')"
+       "$('div#046d66da-f5b4-40ce-9532-2e4f7bf6b94e').width('60%')"
       ],
       "text/plain": [
        "<IPython.core.display.Javascript object>"
@@ -760,7 +760,7 @@
     {
      "data": {
       "application/javascript": [
-       "$('div#1a3af903-2b72-49ee-86f1-ea735e7b9ab6').width('70%')"
+       "$('div#046d66da-f5b4-40ce-9532-2e4f7bf6b94e').width('70%')"
       ],
       "text/plain": [
        "<IPython.core.display.Javascript object>"
@@ -772,7 +772,7 @@
     {
      "data": {
       "application/javascript": [
-       "$('div#1a3af903-2b72-49ee-86f1-ea735e7b9ab6').width('80%')"
+       "$('div#046d66da-f5b4-40ce-9532-2e4f7bf6b94e').width('80%')"
       ],
       "text/plain": [
        "<IPython.core.display.Javascript object>"
@@ -784,7 +784,7 @@
     {
      "data": {
       "application/javascript": [
-       "$('div#1a3af903-2b72-49ee-86f1-ea735e7b9ab6').width('90%')"
+       "$('div#046d66da-f5b4-40ce-9532-2e4f7bf6b94e').width('90%')"
       ],
       "text/plain": [
        "<IPython.core.display.Javascript object>"
@@ -796,7 +796,7 @@
     {
      "data": {
       "application/javascript": [
-       "$('div#1a3af903-2b72-49ee-86f1-ea735e7b9ab6').width('100%')"
+       "$('div#046d66da-f5b4-40ce-9532-2e4f7bf6b94e').width('100%')"
       ],
       "text/plain": [
        "<IPython.core.display.Javascript object>"
@@ -884,7 +884,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 123,
+   "execution_count": 22,
    "metadata": {},
    "outputs": [
     {
@@ -913,7 +913,7 @@
        "         0.047593  , 0.18380744, 1.22702407, 0.01367615, 0.2297593 ]])]"
       ]
      },
-     "execution_count": 123,
+     "execution_count": 22,
      "metadata": {},
      "output_type": "execute_result"
     }
@@ -924,7 +924,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 124,
+   "execution_count": 23,
    "metadata": {},
    "outputs": [
     {
@@ -941,7 +941,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 125,
+   "execution_count": 24,
    "metadata": {},
    "outputs": [
     {
@@ -1072,7 +1072,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 145,
+   "execution_count": 25,
    "metadata": {},
    "outputs": [
     {
