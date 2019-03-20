@@ -125,4 +125,49 @@ def plotClustered():
 
 
 
+def plotMostCommon(dict):
+    """
+    Plots the most common words of each cluster
+    """
+    freqlist0 = sorted(dict.values())  # amount of times a word is used
+    words = []
+    freq = np.zeros(15)
+    for value in range(14, 0, -1):
+        val = freqlist0[-value]
+        freq[value] = val
+        for item in dict.items():
+            if item[1] == val:
+                words.append(item[0])
 
+    return(words, freq)
+
+def wordFrequencyClusters(kmeans):
+    """
+    :return: The most common words of each cluster.
+    """
+    stemmed = handleClean()
+    clustersTweets = [ '', '', '', '']
+
+    for row in range(len(kmeans)):
+        index = kmeans.iat[row, 0]  #finds correct cluster
+        twe = stemmed[row]
+        twe = twe.replace('[', ' ')
+        twe = twe.replace(']', ' ')
+        clustersTweets[index] += str(twe)
+
+    """
+    Now all stemmed tweets will be sorted into the clusters they belong, and we can do wordcount 
+    """
+    word_counts0 = tb.TextBlob(clustersTweets[0]).word_counts #these are dictionaries
+    word_counts1 = tb.TextBlob(clustersTweets[1]).word_counts
+    word_counts2 = tb.TextBlob(clustersTweets[2]).word_counts
+    word_counts3 = tb.TextBlob(clustersTweets[3]).word_counts
+
+    words0 ,freq0 = plotMostCommon(word_counts0)
+    words1, freq1 = plotMostCommon(word_counts1)
+    words2, freq2 = plotMostCommon(word_counts2)
+    words3, freq3 = plotMostCommon(word_counts3)
+    print(words0, freq0)
+
+vecFitted, clustLabels, cent, kmeans = cluster(4, vec)
+wordFrequencyClusters(kmeans)
