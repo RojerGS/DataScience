@@ -1,6 +1,8 @@
 import numpy as np
 import textblob as tb
+from sklearn.cluster import DBSCAN
 import pandas as pd
+import sklearn.metrics
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 from scipy.spatial.distance import cdist
@@ -178,6 +180,52 @@ def wordFrequencyClusters(kmeans):
     plt.ylabel("Frequency of cluster 3")
     plt.show()
 
+def doDBSCAN(vec, eps):
+    # #############################################################################
+    X = np.array(vec)
+    clustering = DBSCAN(eps=eps, min_samples=2).fit(X)
+
+    core_samples_mask = np.zeros_like(clustering.labels_, dtype=bool)
+    core_samples_mask[clustering.core_sample_indices_] = True
+    labels = clustering.labels_
+
+    # Number of clusters in labels, ignoring noise if present.
+    n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+    n_noise_ = list(labels).count(-1)
+
+    print('Estimated number of clusters: %d' % n_clusters_)
+    print('Estimated number of noise points: %d' % n_noise_)
+    print("Silhouette Coefficient: %0.3f"% metrics.silhouette_score(X, labels))
+
+    # Plot result
+    # Black removed and is used for noise instead.
+    unique_labels = set(labels)
+    colors = [plt.cm.Spectral(each)
+              for each in np.linspace(0, 1, len(unique_labels))]
+    for k, col in zip(unique_labels, colors):
+        if k == -1:
+            # Black used for noise.
+            col = [0, 0, 0, 1]
+
+        class_member_mask = (labels == k)
+
+        xy = X[class_member_mask & core_samples_mask]
+        plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=tuple(col),
+                 markeredgecolor='k', markersize=14)
+
+        xy = X[class_member_mask & ~core_samples_mask]
+        plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=tuple(col),
+                 markeredgecolor='k', markersize=6)
+
+    plt.title('Estimated number of clusters: %d' % n_clusters_)
+    plt.show()
+
+def plotmultipleDBSCAN():
+    for i in range(1, 16, 2):
+        eps = (i / 100)
+        print(eps)
+        doDBSCAN(vec, eps)
+
 
 def plotClustered():
     # plotting clustered
@@ -192,8 +240,11 @@ def plotClustered():
     wordFrequencyClusters(kmeans)
 
 
+
+
 if __name__ == '__main__':
     plotOriginal() #Here is the original data with sentiment and polarity analysis
     findK() #finds how many clusters we need
     plotClustered() # we now plot the clustered dataset in the sentiment and polarity graph.  And how many tweets in each cluster ?
                     # Also shows the words frequency of each cluster.
+    plotmultipleDBSCAN()
