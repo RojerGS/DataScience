@@ -1,0 +1,208 @@
+---
+title: "Trump's Tweets analysis"
+author: "Rodrigo Girão Serrão"
+date: "11 de Novembro de 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Setup
+
+```{r imports}
+# Import all these and set the seed for reproducibility
+library(tidyverse)
+library(ggplot2)
+library(lubridate)
+library(tidyr)
+library(scales)
+library(tidytext)
+set.seed(1)
+```
+
+Start by downloading the data made available at www.trumptwitterarchive.com as a json and prepare it slightly.
+
+```{r download_data}
+url <- 'http://www.trumptwitterarchive.com/data/realdonaldtrump/%s.json'
+trump_tweets <- map(2009:2017, ~sprintf(url, .x)) %>%
+  map_df(jsonlite::fromJSON, simplifyDataFrame = TRUE) %>%
+  filter(!is_retweet & !str_detect(text, '^"')) %>%
+  mutate(created_at = parse_date_time(created_at, orders = "a b! d! H!:M!:S! z!* Y!", tz="EST"))
+```
+
+Check what the data looks like by analyzing the first entries and the variables available. Note that we can ask for help with `?trump_tweets`.
+
+```{r check_data}
+# the data is also available in the dslabs
+library(dslabs)
+data(trump_tweets)
+names(trump_tweets)
+head(trump_tweets)
+```
+Just a little test, checking how has the average number of retweets changed over the years.
+
+```{r avg_retweets}
+trump_tweets %>% mutate(created_at = year(created_at)) %>%
+  group_by(created_at) %>% summarise(avg = mean(retweet_count))
+```
+
+We will be testing the conjecture that tweets written by him (from his Android phone) were crazier than the tweets from his staff (from an iPhone). Check the source counts:
+
+```{r tweet_source_count}
+trump_tweets %>% count(source) %>% arrange(desc(n))
+```
+
+We will study the tweets written during Trump's campaign, hence we must trim down the data we are using.
+
+```{r extract_campaign_tweets}
+campaign_tweets <- trump_tweets %>%
+  filter(source %in% c("Twitter for Android", "Twitter for iPhone")) %>%
+  filter(created_at >= ymd("2015-06-17") & # day the campaign was announced
+          created_at < ymd("2016-11-08")) %>%
+  filter(!is_retweet) %>%
+  arrange(created_at)
+head(campaign_tweets)
+```
+
+Check how the two groups of sources show a difference in usage patterns, when it comes to the time of the tweet:
+
+```{r usage_patterns}
+#start by shortening the names of the variables
+campaign_tweets <- campaign_tweets %>%
+  filter(str_detect(source, "Twitter for [a-zA-Z]*")) %>%
+  mutate_at(vars(source), funs(str_replace(., "Twitter for ([A-z]*)", "\\1")))
+head(campaign_tweets)
+campaign_tweets %>%
+  mutate(hour = hour(with_tz(created_at, "EST"))) %>% # extract the hour
+  count(source, hour) %>%
+  group_by(source) %>%
+  mutate(percent = n/sum(n)) %>%
+  ungroup() %>%
+  ggplot(aes(hour, percent, color=source)) + geom_line() + geom_point() +
+    scale_y_continuous(labels = percent_format()) + labs(x = "Hour of day (EST)",
+                                                        y = "% of tweets",
+                                                        color = "")
+```
+
+Note that the usual unnesting of tokens ignores some important characters such as @ and #. Fix it with a regex to catch those cases.
+
+```{r tidytext_example}
+campaign_tweets$text[3008]
+campaign_tweets[3008,] %>% unnest_tokens(word, text) %>% select(word)
+
+pattern <- "([^A-Za-z\\d#@']|'(?![A-Za-z\\d#@]))"
+campaign_tweets[3008,] %>% unnest_tokens(word, text, token="regex", pattern=pattern) %>%
+  select(word) # this still extracts the links to images
+
+campaign_tweets[3008,] %>%
+  mutate(text = str_replace_all(text, "https://t.co/[A-Za-z\\d]+|&amp;", "")) %>%
+  unnest_tokens(word, text, token="regex", pattern=pattern) %>%
+  select(word)
+```
+
+Parse all tweets like this. Remove numbers or the quotation marks from quotes.
+
+```{r tokenize_tweets}
+tweet_words <- campaign_tweets %>% 
+  mutate(text = str_replace_all(text, "https://t.co/[A-Za-z\\d]+|&amp;", ""))  %>%
+  unnest_tokens(word, text, token = "regex", pattern = pattern) %>%
+  filter(!word %in% stop_words$word &
+           !str_detect(word, "^\\d+$")) %>%
+  mutate(word = str_replace(word, "^'", ""))
+tweet_words %>% count(word) %>% arrange(desc(n)) %>% top_n(10)
+```
+
+## Sentiment analysis
+
+Compute the odds ratio of a word being used in Android vs iPhone. Plenty of words have 0 values, correct that with the 0.5 term.
+
+```{r odds_ratio}
+android_iphone_odds <- tweet_words %>%
+  count(word, source) %>%
+  spread(source, n, fill=0) %>%
+  mutate(odds = (Android + 0.5) / (sum(Android) - Android + 0.5) /
+                ((iPhone + 0.5) / (sum(iPhone) - iPhone + 0.5)))
+# only check words that are used often
+android_iphone_odds %>% filter(Android+iPhone > 100) %>% arrange(desc(odds))
+android_iphone_odds %>% filter(Android+iPhone > 100) %>% arrange(odds)
+```
+We now explore the sentiment of each lexicon provided with the tidytext package. Each of AFINN, bing, loughran and nrc are a type of characterization of the word.
+
+```{r sentiment}
+table(sentiments$lexicon)
+head(sentiments[sentiments$lexicon == "bin", ])
+head(sentiments[!is.na(sentiments$score), ])
+```
+
+The "bing" classification divides words into positive and negative while the "afinn" scores each word from -5 to 5. "loughran" and "nrc" attribute different sentiments to each word, with more detail than just *positive* or *negative*.
+
+```{r sentiment_type}
+get_sentiments("bing")
+get_sentiments("afinn")
+get_sentiments("loughran") %>% count(sentiment)
+get_sentiments("nrc") %>% count(sentiment)
+```
+
+We want a more detailed analysis so we opt for the "nrc" classification. Extract the words with the appropriate classification.
+
+```{r nrc_extraction}
+nrc <- sentiments %>%
+  filter(lexicon == "nrc") %>% select(word, sentiment)
+head(nrc)
+```
+
+Now we can map each tweet word to its sentiment and extract only the relevant information, dropping things as the date it was used.
+
+```{r map_words}
+tweet_words %>% inner_join(nrc, by = "word") %>% select(source, word, sentiment)
+
+sentiment_counts <- tweet_words %>%
+  left_join(nrc, by = "word") %>%
+  count(source, sentiment) %>%
+  spread(source, n) %>%
+  mutate(sentiment = replace_na(sentiment, replace = "none"))
+sentiment_counts
+tweet_words %>% group_by(source) %>% summarize(n = n())
+
+sentiment_counts %>%
+  mutate(Android = Android / (sum(Android) - Android) , 
+         iPhone = iPhone / (sum(iPhone) - iPhone), 
+         or = Android/iPhone) %>%
+  arrange(desc(or))
+
+library(broom)
+log_or <- sentiment_counts %>%
+  mutate( log_or = log( (Android / (sum(Android) - Android)) / (iPhone / (sum(iPhone) - iPhone))),
+          se = sqrt( 1/Android + 1/(sum(Android) - Android) + 1/iPhone + 1/(sum(iPhone) - iPhone)),
+          conf.low = log_or - qnorm(0.975)*se,
+          conf.high = log_or + qnorm(0.975)*se) %>%
+  arrange(desc(log_or))
+  
+log_or
+
+log_or %>%
+  mutate(sentiment = reorder(sentiment, log_or),) %>%
+  ggplot(aes(x = sentiment, ymin = conf.low, ymax = conf.high)) +
+  geom_errorbar() +
+  geom_point(aes(sentiment, log_or)) +
+  ylab("Log odds ratio for association between Android and sentiment") +
+  coord_flip()
+```
+
+```{r}
+android_iphone_odds %>% inner_join(nrc) %>%
+  filter(sentiment == "disgust" & Android + iPhone > 10) %>%
+  arrange(desc(odds))
+
+android_iphone_odds %>% inner_join(nrc, by = "word") %>%
+  mutate(sentiment = factor(sentiment, levels = log_or$sentiment)) %>%
+  mutate(log_or = log(odds)) %>%
+  filter(Android + iPhone > 10 & abs(log_or)>1) %>%
+  mutate(word = reorder(word, log_or)) %>%
+  ggplot(aes(word, log_or, fill = log_or < 0)) +
+  facet_wrap(~sentiment, scales = "free_x", nrow = 2) + 
+  geom_bar(stat="identity", show.legend = FALSE) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```

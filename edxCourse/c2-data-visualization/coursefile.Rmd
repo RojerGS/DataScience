@@ -1,0 +1,271 @@
+---
+title: "Untitled"
+author: "Rodrigo Girão Serrão"
+date: "21 de Outubro de 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+<!-- We start by exploring probability distributions -->
+## Probability Distributions
+We will start by computing the mean and sd of the male heights and check if it can be approximated by a normal distribution.
+```{r}
+library(dslabs)
+data(heights);
+idx = heights$sex == "Male";
+m = mean(heights$height[idx]);
+std_dev = sd(heights$height[idx]);
+# compute standard units
+z = scale(heights$height[idx]);
+# around 95% of measurements should be within 2 std deviations from the mean
+sum(abs(z) < 2) / length(z)
+p = seq(0.05, 0.95, 0.05)
+quantiles <- quantile(heights$height[idx], p);
+actual_quantiles <- qnorm(p, mean=m, sd=std_dev)
+plot(quantiles, actual_quantiles)
+abline(0,1)
+```
+Or we could use the standard units instead,
+```{r}
+quantiles <- quantile(z, p);
+actual_quantiles <- qnorm(p)
+plot(quantiles, actual_quantiles)
+abline(0,1)
+```
+
+Now we will describe the female heights, supposedly following a normal distribution as well. Start with a Q-Q plot
+```{r}
+hs <- heights$height[heights$sex == "Female"];
+z <- scale(hs);
+quantiles <- quantile(z, p);
+actual_quantiles <- qnorm(p);
+plot(quantiles, actual_quantiles);
+abline(0, 1)
+```
+
+Now we pause our work on distributions to learn some things about ggplot2. We load it with ggplot2 or with tidyverse and load the murders dataset to create a nifty graph later:
+
+```{r}
+library(dslabs)
+data(murders)
+library(ggplot2)
+library(dplyr)
+library(ggthemes)
+library(ggrepel)
+```
+
+Start by creating the object and assigning its data; notice it is completely blank, even though it has data associated with it.
+
+```{r}
+plot <- ggplot(data = murders)
+plot
+```
+
+Add a "layer" (a component) which specifies we will use a scatter plot. That geometry is defined by geom_point
+
+```{r}
+plot <- plot + geom_point(aes(x = population/10^6, y = total))
+plot
+```
+
+And then we add a layer with the US state names.
+
+```{r}
+plot <- plot + geom_text(aes(population/10^6, total, label=abb))
+plot
+```
+
+Tinker with some parameters a bit to make the plot nicer
+
+```{r}
+plot <- ggplot(data=murders) +
+        geom_point(aes(population/10^6, total), size=3) +
+        geom_text(aes(population/10^6, total, label=abb), nudge_x = 1)
+plot
+```
+
+Or redefine the whole plot with a global mapping, so we don't have to keep mapping population to totals every single time...
+Also notice how we can introduce layers that ignore the global mappings and just use the local ones.
+
+```{r}
+plot <- ggplot(data=murders, mapping=aes(population/10^6, total, label=abb)) +
+        geom_text(nudge_x = 1) +
+        geom_point(size = 3);
+plot <- plot + geom_text(aes(x=10, y=50, label="wowowow"))
+plot
+```
+
+change the scales of the axes
+```{r}
+plot <- plot + 
+        scale_x_continuous(trans = "log10") +
+        scale_y_continuous(trans = "log10")
+plot
+```
+
+because of the log scale we need to compensate the nudge :P
+
+```{r}
+plot <- ggplot(data=murders, mapping=aes(population/10^6, total, label=abb)) +
+        geom_text(nudge_x = 0.075) +
+        geom_point(size = 3) +
+        scale_x_log10() +
+        scale_y_log10();
+plot
+```
+
+and now add labels and a title, as well as colour; assign a categorical variable so it gives different colours to different categories.
+
+```{r}
+plot <- plot +
+        xlab("Population in millions (log scale)") +
+        ylab("Total murders (log scale)") +
+        ggtitle("Gun murders in USA") +
+        geom_point(aes(col=region), size=3)
+plot
+```
+
+Now find the US avg murder rate so we can plot a helper line.
+```{r}
+rate <- murders %>%
+          summarize(rate = sum(total)/sum(population)*10^6) %>% .$rate
+plot <- plot + geom_abline(intercept=log10(rate))
+plot
+```
+
+Change line colour, style, and make it before the points.
+```{r}
+plot <- ggplot(data=murders, mapping=aes(population/10^6, total, label=abb)) +
+        geom_text(nudge_x = 0.075) +
+        geom_point(size = 3) +
+        scale_x_log10() +
+        scale_y_log10() +
+        xlab("Population in millions (log scale)") +
+        ylab("Total murders (log scale)") +
+        ggtitle("Gun murders in USA") +
+        geom_abline(intercept = log10(rate), lty=2, color="darkgrey") +
+        geom_point(aes(col=region), size=3) +
+        scale_color_discrete(name="Region")
+plot
+```
+
+Last finishing touches with add-ons
+```{r}
+plot <- ggplot(data=murders, mapping=aes(population/10^6, total, label=abb)) +
+        geom_point(size = 3) +
+        scale_x_log10() +
+        scale_y_log10() +
+        xlab("Population in millions (log scale)") +
+        ylab("Total murders (log scale)") +
+        ggtitle("Gun murders in USA") +
+        geom_abline(intercept = log10(rate), lty=2, color="darkgrey") +
+        geom_point(aes(col=region), size=3) +
+        scale_color_discrete(name="Region") +
+        theme_economist() + geom_text_repel()
+plot
+```
+
+Now make the histogram for the male heights
+```{r}
+library(ggplot2)
+malehs <- heights %>% filter(sex=="Male")
+plot <- malehs %>% ggplot(aes(x=height)) +
+        geom_histogram(binwidth=1, fill="blue", col="black") +
+        ggtitle("Histogram of male heights") +
+        xlab("Male heights")
+plot
+```
+
+and the smooth densities and the qq plots
+```{r}
+baseplot <- malehs %>% ggplot(aes(x=height))
+density <- baseplot + geom_density(fill="blue")
+# prepare the parameters
+params = heights %>% filter(sex=="Male") %>% summarize(mean=mean(height), sd=sd(height))
+qq <- heights %>% ggplot(aes(sample=height)) + geom_qq(dparams = params) + geom_abline()
+density
+qq
+```
+
+Now we also make two smooth density plots for male and female students by grouping their data.
+```{r}
+heights %>% ggplot(aes(height, group=sex)) + geom_density()
+```
+
+instead we can request two different colours and two density plots are drawn automagically; we can also fill them!
+```{r}
+heights %>% ggplot(aes(height, color=sex)) + geom_density()
+heights %>% ggplot(aes(height, fill=sex)) + geom_density(alpha=0.2)
+```
+
+## Random dplyr magic
+
+Now, for section 3 of the course, we will fiddle around with a bit of dplyr.
+```{r}
+library(tidyverse)
+data(heights)
+data(murders)
+```
+
+Start with some standard summarizing
+```{r}
+s <- heights %>%
+      filter(sex == "Male") %>%
+      summarize(avg = mean(height), stdev = sd(height))
+s$avg
+```
+
+also note how to make dplyr return vectors instead of data frames:
+```{r}
+s1 <- murders %>% summarize(rate = sum(total)/sum(population))
+s1
+class(s1)
+s2 <- murders %>% summarize(rate = sum(total)/sum(population)) %>% .$rate
+s2
+class(s2)
+```
+
+Now we group things with group_by and then summarize
+```{r}
+heights %>% group_by(sex) %>% summarize(avg = mean(height), stdev = sd(height))
+murders %>% group_by(region) %>% summarize(rate = sum(total)/sum(population)*100000)
+```
+
+Order data frames by a specific column
+```{r}
+murders %>% arrange(population) %>% head()
+murders %>% arrange(desc(population)) %>% head()
+murders %>% arrange(region, desc(population))
+```
+
+Explore a random data set for the DataCamp exercise. Study a bit the blood pressure of female patients ages 20-29.
+```{r}
+library(NHANES)
+data(NHANES)
+tab <- NHANES %>% filter(Gender == "female" & AgeDecade == " 20-29")
+ref <- tab %>% summarize(avg = mean(BPSysAve, na.rm=TRUE), stdev = sd(BPSysAve, na.rm=TRUE))
+ref_avg <- ref %>% .$avg
+```
+And now do it for all female patients, grouped by age:
+```{r}
+NHANES %>% filter(Gender == "female") %>%
+            group_by(AgeDecade) %>%
+            summarize(avg = mean(BPSysAve, na.rm=TRUE), stdev = sd(BPSysAve, na.rm=TRUE))
+```
+
+Study the avg systolic blood pressure by race (Race1 variable):
+```{r}
+NHANES %>% filter(Gender=="male" & AgeDecade==" 40-49") %>%
+    group_by(Race1) %>%
+    summarize(average=mean(BPSysAve, na.rm=TRUE), standard_deviation=sd(BPSysAve, na.rm=TRUE)) %>%
+    arrange(average)
+```

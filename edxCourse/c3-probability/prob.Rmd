@@ -1,0 +1,98 @@
+---
+title: "Probability"
+author: "Rodrigo Girão Serrão"
+date: "26 de Outubro de 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Simple simulation
+
+```{r}
+B <- 10000
+urn <- rep(c("blue", "red"), times=c(2,3))
+tab <- table(replicate(B, sample(urn, 1)))/B
+
+tab2 <- table(sample(urn, B, replace=TRUE))/B
+```
+
+Create a card deck
+```{r}
+suits <- c("diamonds", "hearts", "spades", "clubs")
+values <- c("ace", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "jack", "queen", "king")
+deck <- expand.grid(suit=suits, value=values)
+deck <- paste(deck$value, deck$suit)
+```
+
+and compute the probability of taking a king knowing you just took a king from the deck as well as the probability of getting a blackjack:
+
+```{r}
+library(gtools)
+hands <- permutations(52, 2, v=deck)
+kings <- paste("king", suits)
+first_card <- hands[,1]
+second_card <- hands[,2]
+sum(first_card %in% kings & second_card %in% kings) / sum(first_card %in% kings)
+
+aces <- paste("ace", suits)
+facecard <- c("king", "jack", "queen", "ten")
+facecard <- expand.grid(value=facecard, suit=suits)
+facecard <- paste(facecard$value, facecard$suit)
+hands <- combinations(52, 2, v=deck)
+mean(hands[,1] %in% aces & hands[,2] %in% facecard)
+# monte carlo sim.
+B <- 10000
+results <- replicate(B, {
+  hand <- sample(deck, 2)
+  ((hand[1] %in% aces & hand[2] %in% facecard) | (hand[1] %in% facecard & hand[2] %in% aces))
+})
+mean(results)
+```
+
+Use Monte Carlo simulations to calculate the probability that, if n people are in a classroom, at least two of them share the same birthday.
+
+```{r}
+compute_prob <- function(n, B=10000) {
+  mean(replicate(B, {
+  bdays = sample(1:365, n, replace=TRUE)
+  any(duplicated(bdays))
+  }))
+}
+
+exact_prob <- function(n) {
+  factors <- seq(365, 365-n+1)/365
+  1 - prod(factors)
+}
+
+n <- 1:60
+lookup_table <- sapply(n, compute_prob)
+exact_table <- sapply(n, exact_prob)
+lookup_table[40]
+exact_table[40]
+plot(n, lookup_table)
+plot(n, exact_table)
+```
+
+A Monte Carlo simulation with normally distributed values. In particular, mimic the sample from the *heights* data set:
+
+```{r}
+library(dplyr)
+library(dslabs)
+library(ggplot2)
+data(heights)
+x <- heights %>% filter(sex=="Male") %>% .$height
+n <- length(x)
+avg <- mean(x)
+s <- sd(x)
+simulated_heights <- rnorm(n, avg, s)
+
+all_heights <- c(x, simulated_heights)
+group <- c(rep("real", n), rep("simulated", n))
+
+data.frame(heights=all_heights, type=group) %>%
+  ggplot(aes(heights, fill=type)) +
+  geom_density(alpha=0.8, bw=1, position="identity")
+```
